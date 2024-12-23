@@ -1,11 +1,5 @@
-algorithm: "TokenBucket" # Select "TokenBucket" or "FixedWindowCounter"
-
-# Parameters for TokenBucket algorithm
-token_bucket:
-  capacity: 10          # Maximum number of tokens
-  refill_rate: 2         # Tokens added per second
-
-# Parameters for FixedWindowCounter algorithm
-fixed_window_counter:
-  window_size: 1000      # Window size in milliseconds
-  limit: 5               # Maximum requests per window
+rate_limit:
+  algorithm: "token_bucket"
+  token_bucket:
+    capacity: 10
+    refill_rate: 1 # tokens per second
