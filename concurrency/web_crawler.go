@@ -16,24 +16,28 @@ type Fetcher interface {
 // pages starting with url, to a maximum of depth.
 func Crawl(url string, depth int, fetcher Fetcher) {
 	var str_map = make(map[string]bool)
-	var mux sync.Mutex
+	var mu sync.Mutex
 	var wg sync.WaitGroup
 
 	var crawler func(string, int)
 	crawler = func(url string, depth int) {
-		defer wg.Done()
+		defer wg.Done() // decrement waitgroup count when current goroutine finishes.
 
 		if depth <= 0 {
 			return
 		}
 
-		mux.Lock()
+		// A mutex does not lock specific data structures or variables directly;
+		// instead, it locks the code that accesses those resources
+		// any code between a call to Lock() and Unlock()
+		// on a mutex is protected from concurrent access by other goroutines
+		mu.Lock()
 		if _, ok := str_map[url]; ok {
-			mux.Unlock()
+			mu.Unlock()
 			return
 		} else {
 			str_map[url] = true
-			mux.Unlock()
+			mu.Unlock()
 		}
 
 		body, urls, err := fetcher.Fetch(url)
@@ -44,13 +48,13 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 		fmt.Printf("found: %s %q %q\n", url, body, urls)
 
 		for _, u := range urls {
-			wg.Add(1)
+			wg.Add(1) // add count to waitGroup for this goroutine
 			go crawler(u, depth-1)
 		}
 	}
 	wg.Add(1)
 	crawler(url, depth)
-	wg.Wait()
+	wg.Wait() // blocks main function until wg count reaches zero
 }
 
 // ------------------------------------------------------------------------------
